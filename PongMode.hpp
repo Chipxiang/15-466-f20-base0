@@ -29,15 +29,33 @@ struct PongMode : Mode {
 
 	glm::vec2 left_paddle = glm::vec2(-court_radius.x + 0.5f, 0.0f);
 	glm::vec2 right_paddle = glm::vec2( court_radius.x - 0.5f, 0.0f);
-
+	
+	uint32_t brick_count = 1;
+	glm::vec2 brick_radius = glm::vec2(0.3f, 0.6f);
+	std::vector<glm::vec2> bricks = { glm::vec2(0.0f, court_radius.y - brick_radius.y) };
 	glm::vec2 ball = glm::vec2(0.0f, 0.0f);
 	glm::vec2 ball_velocity = glm::vec2(-1.0f, 0.0f);
-
+	
 	uint32_t left_score = 0;
 	uint32_t right_score = 0;
 
 	float ai_offset = 0.0f;
 	float ai_offset_update = 0.0f;
+
+	//----- colors -----
+	#define HEX_TO_U8VEC4( HX ) (glm::u8vec4( (HX >> 24) & 0xff, (HX >> 16) & 0xff, (HX >> 8) & 0xff, (HX) & 0xff ))
+
+	const std::vector< glm::u8vec4 > all_colors = {
+		HEX_TO_U8VEC4(0xffffffff), HEX_TO_U8VEC4(0xff0000ff), HEX_TO_U8VEC4(0xffff00ff),
+	    HEX_TO_U8VEC4(0x0000ffff)
+	};
+	std::vector<uint32_t> brick_color_ids = { 0 };
+	uint32_t curr_left_color_id = 0;
+	glm::u8vec4 ball_color = all_colors[2];
+	glm::u8vec4 left_color = all_colors[curr_left_color_id];
+	glm::u8vec4 right_color = all_colors[curr_left_color_id];
+
+	#undef HEX_TO_U8VEC4
 
 	//----- pretty rainbow trails -----
 

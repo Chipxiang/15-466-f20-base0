@@ -118,7 +118,20 @@ PongMode::~PongMode() {
 }
 
 bool PongMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
-
+	// TODO: handle mouse scroll change color
+	if (evt.type == SDL_MOUSEWHEEL) {
+		if (evt.wheel.y > 0) {
+			curr_left_color_id++;
+			if (curr_left_color_id >= (uint32_t)all_colors.size())
+				curr_left_color_id -= (uint32_t)all_colors.size();
+		}
+		if (evt.wheel.y < 0) {
+			if (curr_left_color_id == 0)
+				curr_left_color_id += (uint32_t)all_colors.size();
+			curr_left_color_id--;
+		}
+		left_color = all_colors[curr_left_color_id];
+	}
 	if (evt.type == SDL_MOUSEMOTION) {
 		//convert mouse from window pixels (top-left origin, +y is down) to clip space ([-1,1]x[-1,1], +y is up):
 		glm::vec2 clip_mouse = glm::vec2(
@@ -171,14 +184,16 @@ void PongMode::update(float elapsed) {
 	//---- collision handling ----
 
 	//paddles:
-	auto paddle_vs_ball = [this](glm::vec2 const &paddle) {
+	auto paddle_vs_ball = [this](glm::vec2 const &paddle, bool is_left) {
 		//compute area of overlap:
 		glm::vec2 min = glm::max(paddle - paddle_radius, ball - ball_radius);
 		glm::vec2 max = glm::min(paddle + paddle_radius, ball + ball_radius);
 
 		//if no overlap, no collision:
 		if (min.x > max.x || min.y > max.y) return;
-
+		//if color not match, no collision:
+		if (is_left && left_color != ball_color) return;
+		if (!is_left && right_color != ball_color) return;
 		if (max.x - min.x > max.y - min.y) {
 			//wider overlap in x => bounce in y direction:
 			if (ball.y > paddle.y) {
@@ -202,9 +217,48 @@ void PongMode::update(float elapsed) {
 			ball_velocity.y = glm::mix(ball_velocity.y, vel, 0.75f);
 		}
 	};
-	paddle_vs_ball(left_paddle);
-	paddle_vs_ball(right_paddle);
+	paddle_vs_ball(left_paddle, true);
+	paddle_vs_ball(right_paddle, false);
 
+	//bricks:
+	auto brick_vs_ball = [this](glm::vec2 const& brick, uint32_t id) {
+		//compute area of overlap:
+		glm::vec2 min = glm::max(brick - brick_radius, ball - ball_radius);
+		glm::vec2 max = glm::min(brick + brick_radius, ball + ball_radius);
+
+		//if no overlap, no collision:
+		if (min.x > max.x || min.y > max.y) return;
+
+		ball_color = all_colors[brick_color_ids[id]];
+		if (max.x - min.x > max.y - min.y) {
+			//wider overlap in x => bounce in y direction:
+			if (ball.y > brick.y) {
+				ball.y = brick.y + brick_radius.y + ball_radius.y;
+				ball_velocity.y = std::abs(ball_velocity.y);
+			}
+			else {
+				ball.y = brick.y - brick_radius.y - ball_radius.y;
+				ball_velocity.y = -std::abs(ball_velocity.y);
+			}
+		}
+		else {
+			//wider overlap in y => bounce in x direction:
+			if (ball.x > brick.x) {
+				ball.x = brick.x + brick_radius.x + ball_radius.x;
+				ball_velocity.x = std::abs(ball_velocity.x);
+			}
+			else {
+				ball.x = brick.x - brick_radius.x - ball_radius.x;
+				ball_velocity.x = -std::abs(ball_velocity.x);
+			}
+			//warp y velocity based on offset from paddle center:
+			float vel = (ball.y - brick.y) / (brick_radius.y + ball_radius.y);
+			ball_velocity.y = glm::mix(ball_velocity.y, vel, 0.75f);
+		}
+	};
+	for (uint32_t i = 0; i < bricks.size(); i++){
+		brick_vs_ball(bricks[i], i);
+	}
 	//court walls:
 	if (ball.y > court_radius.y - ball_radius.y) {
 		ball.y = court_radius.y - ball_radius.y;
@@ -301,7 +355,9 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 	draw_rectangle(left_paddle+s, paddle_radius, shadow_color);
 	draw_rectangle(right_paddle+s, paddle_radius, shadow_color);
 	draw_rectangle(ball+s, ball_radius, shadow_color);
-
+	for (uint32_t i = 0; i < bricks.size(); i++) {
+		draw_rectangle(bricks[i] + s, brick_radius, all_colors[brick_color_ids[i]]);
+	}
 	//ball's trail:
 	if (ball_trail.size() >= 2) {
 		//start ti at second element so there is always something before it to interpolate from:
@@ -332,12 +388,12 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 	draw_rectangle(glm::vec2( 0.0f, court_radius.y+wall_radius), glm::vec2(court_radius.x, wall_radius), fg_color);
 
 	//paddles:
-	draw_rectangle(left_paddle, paddle_radius, fg_color);
-	draw_rectangle(right_paddle, paddle_radius, fg_color);
+	draw_rectangle(left_paddle, paddle_radius, left_color);
+	draw_rectangle(right_paddle, paddle_radius, right_color);
 	
 
 	//ball:
-	draw_rectangle(ball, ball_radius, fg_color);
+	draw_rectangle(ball, ball_radius, ball_color);
 
 	//scores:
 	glm::vec2 score_radius = glm::vec2(0.1f, 0.1f);
