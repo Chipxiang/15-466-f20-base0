@@ -32,14 +32,20 @@ struct PongMode : Mode {
 
 	glm::vec2 brick_radius = glm::vec2(0.4f, 0.7f);
 	std::vector<glm::vec2> slots =
-	{ glm::vec2(0.0f, court_radius.y - brick_radius.y), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, -court_radius.y + 4 * brick_radius.y), 
-	glm::vec2(0.0f, -court_radius.y + brick_radius.y) ,
-	glm::vec2(-4 * brick_radius.x, -court_radius.y + 2.5 * brick_radius.y), glm::vec2(-4 * brick_radius.x, -court_radius.y + 5.5 * brick_radius.y),
-	glm::vec2(-4 * brick_radius.x, court_radius.y - 5.5 * brick_radius.y), glm::vec2(-4 * brick_radius.x, court_radius.y - 2.5 * brick_radius.y), 
-	glm::vec2(4 * brick_radius.x, -court_radius.y + 2.5 * brick_radius.y), glm::vec2(4 * brick_radius.x, -court_radius.y + 5.5 * brick_radius.y),
-	glm::vec2(4 * brick_radius.x, court_radius.y - 5.5 * brick_radius.y), glm::vec2(4 * brick_radius.x, court_radius.y - 2.5 * brick_radius.y) };
+	{ glm::vec2(0.0f, court_radius.y - brick_radius.y),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(0.0f, -court_radius.y + 4 * brick_radius.y),
+		glm::vec2(0.0f, -court_radius.y + brick_radius.y) ,
+		glm::vec2(-4 * brick_radius.x, -court_radius.y + 2.5 * brick_radius.y),
+		glm::vec2(-4 * brick_radius.x, -court_radius.y + 5.5 * brick_radius.y),
+		glm::vec2(-4 * brick_radius.x, court_radius.y - 5.5 * brick_radius.y),
+		glm::vec2(-4 * brick_radius.x, court_radius.y - 2.5 * brick_radius.y),
+		glm::vec2(4 * brick_radius.x, -court_radius.y + 2.5 * brick_radius.y),
+		glm::vec2(4 * brick_radius.x, -court_radius.y + 5.5 * brick_radius.y),
+		glm::vec2(4 * brick_radius.x, court_radius.y - 5.5 * brick_radius.y),
+		glm::vec2(4 * brick_radius.x, court_radius.y - 2.5 * brick_radius.y) };
 
-	std::vector<glm::vec2> bricks = { glm::vec2(0.0f, court_radius.y - 4 * brick_radius.y)};
+	std::vector<glm::vec2> bricks = { glm::vec2(0.0f, court_radius.y - 4 * brick_radius.y) };
 
 	glm::vec2 ball = glm::vec2(0.0f, 0.0f);
 	glm::vec2 ball_velocity = glm::vec2(-1.0f, 0.0f);
