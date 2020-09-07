@@ -118,7 +118,6 @@ PongMode::~PongMode() {
 }
 
 bool PongMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
-	// TODO: handle mouse scroll change color
 	if (evt.type == SDL_MOUSEBUTTONDOWN) {
 		curr_left_color_id++;
 		if (curr_left_color_id >= (uint32_t)all_colors.size())
@@ -245,7 +244,7 @@ void PongMode::update(float elapsed) {
 		if (min.x > max.x || min.y > max.y) return;
 
 		ball_color = all_colors[brick_color_ids[id]];
-		std::uniform_real_distribution<float> update_rand(0.0f, 1.0f);
+		std::uniform_real_distribution<float> update_rand(0.1f, 1.5f);
 		auto offset = update_rand(mt);
 		ai_color_offset += offset;
 
