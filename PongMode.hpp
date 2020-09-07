@@ -17,9 +17,9 @@ struct PongMode : Mode {
 	virtual ~PongMode();
 
 	//functions called by main loop:
-	virtual bool handle_event(SDL_Event const &, glm::uvec2 const &window_size) override;
+	virtual bool handle_event(SDL_Event const&, glm::uvec2 const& window_size) override;
 	virtual void update(float elapsed) override;
-	virtual void draw(glm::uvec2 const &drawable_size) override;
+	virtual void draw(glm::uvec2 const& drawable_size) override;
 
 	//----- game state -----
 
@@ -28,14 +28,22 @@ struct PongMode : Mode {
 	glm::vec2 ball_radius = glm::vec2(0.2f, 0.2f);
 
 	glm::vec2 left_paddle = glm::vec2(-court_radius.x + 0.5f, 0.0f);
-	glm::vec2 right_paddle = glm::vec2( court_radius.x - 0.5f, 0.0f);
-	
-	uint32_t brick_count = 1;
-	glm::vec2 brick_radius = glm::vec2(0.3f, 0.6f);
-	std::vector<glm::vec2> bricks = { glm::vec2(0.0f, court_radius.y - brick_radius.y) };
+	glm::vec2 right_paddle = glm::vec2(court_radius.x - 0.5f, 0.0f);
+
+	glm::vec2 brick_radius = glm::vec2(0.4f, 0.7f);
+	std::vector<glm::vec2> slots = { glm::vec2(0.0f, court_radius.y - brick_radius.y) };
+
+	std::vector<glm::vec2> bricks =
+	{ glm::vec2(0.0f, court_radius.y - brick_radius.y), glm::vec2(0.0f, court_radius.y - 4 * brick_radius.y),
+	glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, -court_radius.y + 4 * brick_radius.y), glm::vec2(0.0f, -court_radius.y + brick_radius.y) ,
+	glm::vec2(-4 * brick_radius.x, -court_radius.y + 2.5 * brick_radius.y), glm::vec2(-4 * brick_radius.x, -court_radius.y + 5.5 * brick_radius.y),
+	glm::vec2(-4 * brick_radius.x, court_radius.y - 5.5 * brick_radius.y), glm::vec2(-4 * brick_radius.x, court_radius.y - 2.5 * brick_radius.y), 
+	glm::vec2(4 * brick_radius.x, -court_radius.y + 2.5 * brick_radius.y), glm::vec2(4 * brick_radius.x, -court_radius.y + 5.5 * brick_radius.y),
+	glm::vec2(4 * brick_radius.x, court_radius.y - 5.5 * brick_radius.y), glm::vec2(4 * brick_radius.x, court_radius.y - 2.5 * brick_radius.y) };
+
 	glm::vec2 ball = glm::vec2(0.0f, 0.0f);
 	glm::vec2 ball_velocity = glm::vec2(-1.0f, 0.0f);
-	
+
 	uint32_t left_score = 0;
 	uint32_t right_score = 0;
 
@@ -43,19 +51,19 @@ struct PongMode : Mode {
 	float ai_offset_update = 0.0f;
 
 	//----- colors -----
-	#define HEX_TO_U8VEC4( HX ) (glm::u8vec4( (HX >> 24) & 0xff, (HX >> 16) & 0xff, (HX >> 8) & 0xff, (HX) & 0xff ))
+#define HEX_TO_U8VEC4( HX ) (glm::u8vec4( (HX >> 24) & 0xff, (HX >> 16) & 0xff, (HX >> 8) & 0xff, (HX) & 0xff ))
 
 	const std::vector< glm::u8vec4 > all_colors = {
 		HEX_TO_U8VEC4(0xffffffff), HEX_TO_U8VEC4(0xff0000ff), HEX_TO_U8VEC4(0xffff00ff),
-	    HEX_TO_U8VEC4(0x0000ffff)
+		HEX_TO_U8VEC4(0x0000ffff)
 	};
-	std::vector<uint32_t> brick_color_ids = { 0 };
+	std::vector<uint32_t> brick_color_ids = { 0, 1 , 2, 3, 0, 1, 2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3};
 	uint32_t curr_left_color_id = 0;
 	glm::u8vec4 ball_color = all_colors[2];
 	glm::u8vec4 left_color = all_colors[curr_left_color_id];
 	glm::u8vec4 right_color = all_colors[curr_left_color_id];
 
-	#undef HEX_TO_U8VEC4
+#undef HEX_TO_U8VEC4
 
 	//----- pretty rainbow trails -----
 
@@ -66,13 +74,13 @@ struct PongMode : Mode {
 
 	//draw functions will work on vectors of vertices, defined as follows:
 	struct Vertex {
-		Vertex(glm::vec3 const &Position_, glm::u8vec4 const &Color_, glm::vec2 const &TexCoord_) :
+		Vertex(glm::vec3 const& Position_, glm::u8vec4 const& Color_, glm::vec2 const& TexCoord_) :
 			Position(Position_), Color(Color_), TexCoord(TexCoord_) { }
 		glm::vec3 Position;
 		glm::u8vec4 Color;
 		glm::vec2 TexCoord;
 	};
-	static_assert(sizeof(Vertex) == 4*3 + 1*4 + 4*2, "PongMode::Vertex should be packed");
+	static_assert(sizeof(Vertex) == 4 * 3 + 1 * 4 + 4 * 2, "PongMode::Vertex should be packed");
 
 	//Shader program that draws transformed, vertices tinted with vertex colors:
 	ColorTextureProgram color_texture_program;

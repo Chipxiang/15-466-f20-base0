@@ -181,6 +181,10 @@ void PongMode::update(float elapsed) {
 
 	ball += elapsed * speed_multiplier * ball_velocity;
 
+	//----- brick update -----
+
+	
+
 	//---- collision handling ----
 
 	//paddles:
@@ -221,6 +225,7 @@ void PongMode::update(float elapsed) {
 	paddle_vs_ball(right_paddle, false);
 
 	//bricks:
+
 	auto brick_vs_ball = [this](glm::vec2 const& brick, uint32_t id) {
 		//compute area of overlap:
 		glm::vec2 min = glm::max(brick - brick_radius, ball - ball_radius);
@@ -255,6 +260,12 @@ void PongMode::update(float elapsed) {
 			float vel = (ball.y - brick.y) / (brick_radius.y + ball_radius.y);
 			ball_velocity.y = glm::mix(ball_velocity.y, vel, 0.75f);
 		}
+		std::random_device rd;
+		std::mt19937 generator(rd());
+		//std::uniform_real_distribution<float> uniform_float(min, max);
+		std::uniform_int_distribution<int> uniform_int(0, (uint32_t)all_colors.size() - 1);
+		auto color_id = uniform_int(generator);
+		brick_color_ids[id] = color_id;
 	};
 	for (uint32_t i = 0; i < bricks.size(); i++){
 		brick_vs_ball(bricks[i], i);
