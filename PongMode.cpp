@@ -119,17 +119,10 @@ PongMode::~PongMode() {
 
 bool PongMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
 	// TODO: handle mouse scroll change color
-	if (evt.type == SDL_MOUSEWHEEL) {
-		if (evt.wheel.y > 0) {
-			curr_left_color_id++;
-			if (curr_left_color_id >= (uint32_t)all_colors.size())
-				curr_left_color_id -= (uint32_t)all_colors.size();
-		}
-		if (evt.wheel.y < 0) {
-			if (curr_left_color_id == 0)
-				curr_left_color_id += (uint32_t)all_colors.size();
-			curr_left_color_id--;
-		}
+	if (evt.type == SDL_MOUSEBUTTONDOWN) {
+		curr_left_color_id++;
+		if (curr_left_color_id >= (uint32_t)all_colors.size())
+			curr_left_color_id -= (uint32_t)all_colors.size();
 		left_color = all_colors[curr_left_color_id];
 	}
 	if (evt.type == SDL_MOUSEMOTION) {
@@ -162,6 +155,13 @@ void PongMode::update(float elapsed) {
 		} else {
 			right_paddle.y = std::max(ball.y + ai_offset, right_paddle.y - 2.0f * elapsed);
 		}
+		if (ball_color != right_color) {
+			ai_color_offset -= elapsed;
+			if (ai_color_offset < 0) {
+				right_color = ball_color;
+				ai_color_offset = 0;
+			}
+		}
 	}
 
 	//clamp paddles to court:
@@ -174,7 +174,7 @@ void PongMode::update(float elapsed) {
 	//----- ball update -----
 
 	//speed of ball doubles every four points:
-	float speed_multiplier = 4.0f * std::pow(2.0f, (left_score + right_score) / 4.0f);
+	float speed_multiplier = 4.0f * std::pow(1.2f, (left_score + right_score) / 4.0f);
 
 	//velocity cap, though (otherwise ball can pass through paddles):
 	speed_multiplier = std::min(speed_multiplier, 10.0f);
@@ -235,6 +235,10 @@ void PongMode::update(float elapsed) {
 		if (min.x > max.x || min.y > max.y) return;
 
 		ball_color = all_colors[brick_color_ids[id]];
+		std::uniform_real_distribution<float> update_rand(0.0f, 1.0f);
+		auto offset = update_rand(mt);
+		ai_color_offset += offset;
+
 		if (max.x - min.x > max.y - min.y) {
 			//wider overlap in x => bounce in y direction:
 			if (ball.y > brick.y) {
@@ -260,12 +264,15 @@ void PongMode::update(float elapsed) {
 			float vel = (ball.y - brick.y) / (brick_radius.y + ball_radius.y);
 			ball_velocity.y = glm::mix(ball_velocity.y, vel, 0.75f);
 		}
-		std::random_device rd;
-		std::mt19937 generator(rd());
-		//std::uniform_real_distribution<float> uniform_float(min, max);
-		std::uniform_int_distribution<int> uniform_int(0, (uint32_t)all_colors.size() - 1);
-		auto color_id = uniform_int(generator);
+		std::uniform_int_distribution<int> color_rand(0, (uint32_t)all_colors.size() - 1);
+		std::uniform_int_distribution<int> pos_rand(0, (uint32_t)slots.size() - 1);
+		glm::vec2 temp = bricks[id];
+		auto slot_id = pos_rand(mt);
+		bricks[id] = slots[slot_id];
+		slots[slot_id] = temp;
+		auto color_id = color_rand(mt);
 		brick_color_ids[id] = color_id;
+
 	};
 	for (uint32_t i = 0; i < bricks.size(); i++){
 		brick_vs_ball(bricks[i], i);
