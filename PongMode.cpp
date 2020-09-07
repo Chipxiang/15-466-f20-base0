@@ -173,16 +173,26 @@ void PongMode::update(float elapsed) {
 
 	//----- ball update -----
 
-	//speed of ball doubles every four points:
+	//speed of ball times 1.2 every 4 points:
 	float speed_multiplier = 4.0f * std::pow(1.2f, (left_score + right_score) / 4.0f);
 
 	//velocity cap, though (otherwise ball can pass through paddles):
-	speed_multiplier = std::min(speed_multiplier, 10.0f);
+	speed_multiplier = std::min(speed_multiplier, 5.0f);
 
 	ball += elapsed * speed_multiplier * ball_velocity;
 
 	//----- brick update -----
 
+	// Add one brick every 4 points
+	if (bricks.size() <= (left_score + right_score) / 4.0f && bricks.size() < 5) {
+		std::uniform_int_distribution<int> brick_rand(0, (uint32_t)slots.size() - 1);
+		std::uniform_int_distribution<int> color_rand(0, (uint32_t)all_colors.size() - 1);
+		auto new_brick = brick_rand(mt);
+		bricks.push_back(slots[new_brick]);
+		auto color_id = color_rand(mt);
+		brick_color_ids.push_back(color_id);
+		slots.erase(slots.begin() + new_brick);
+	}
 	
 
 	//---- collision handling ----
